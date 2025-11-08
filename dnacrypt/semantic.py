@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from enum import Enum
 
 # Import AST node types
-from dnacrypt_parser import (
+from .parser import (
     ASTNode, Program, VariableDeclaration, Assignment, FunctionDeclaration,
     ReturnStatement, IfStatement, WhileStatement, ForStatement,
     TryStatement, ThrowStatement, BreakStatement, ContinueStatement,
@@ -783,9 +783,9 @@ if __name__ == "__main__":
     print("\nThe semantic analyzer is ready!")
     print("\nTo use:")
     print("""
-from dnacrypt_lexer import DNACryptLexer
-from dnacrypt_parser import DNACryptParser
-from dnacrypt_semantic import SemanticAnalyzer
+from .lexer import DNACryptLexer
+from .parser import DNACryptParser
+from .semantic import SemanticAnalyzer
 
 code = '''
 let message: string = "Hello"

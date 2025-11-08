@@ -8,7 +8,7 @@ from typing import List, Optional, Any, Union
 
 
 # Import TokenType and Token from lexer
-from dnacrypt_lexer import Token, TokenType
+from .lexer import Token, TokenType
 
 
 # ============ AST NODE DEFINITIONS ============

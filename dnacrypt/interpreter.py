@@ -680,7 +680,7 @@ class DNACryptInterpreter:
     
     def interpret(self, ast):
         """Interpret the AST"""
-        from dnacrypt_parser import Program
+        from .parser import Program
         
         if isinstance(ast, Program):
             result = None
@@ -692,7 +692,7 @@ class DNACryptInterpreter:
     
     def eval_node(self, node, env: Environment):
         """Evaluate an AST node"""
-        from dnacrypt_parser import (
+        from .parser import (
             VariableDeclaration, Assignment, FunctionDeclaration,
             ReturnStatement, IfStatement, WhileStatement, ForStatement,
             TryStatement, ThrowStatement, BreakStatement, ContinueStatement,
@@ -1098,9 +1098,9 @@ if __name__ == "__main__":
     print("\nThe interpreter is ready!")
     print("\nTo use:")
     print("""
-from dnacrypt_lexer import DNACryptLexer
-from dnacrypt_parser import DNACryptParser
-from dnacrypt_interpreter import DNACryptInterpreter
+from .lexer import DNACryptLexer
+from .parser import DNACryptParser
+from .interpreter import DNACryptInterpreter
 
 code = '''
 let message = "Hello World"
