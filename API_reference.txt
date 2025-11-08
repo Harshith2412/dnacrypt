@@ -1,0 +1,1041 @@
+DNACrypt API Reference 
+
+Complete reference for all DNACrypt built-in functions, methods, and types. 
+
+Version: 1.0.0 
+Last Updated: November 2025 
+
+ 
+
+Table of Contents 
+
+Cryptography Functions 
+DNA Functions 
+Utility Functions 
+Data Types 
+Constants 
+Error Types 
+ 
+
+Cryptography Functions 
+
+Key Generation 
+
+generate(algorithm) 
+
+Generate a symmetric encryption key. 
+
+Parameters: 
+
+algorithm (string): Encryption algorithm 
+AES256 - 256-bit AES (recommended) 
+AES128 - 128-bit AES 
+Returns: Key object 
+
+Example: 
+
+let key = generate(AES256) 
+let key128 = generate(AES128) 
+ 
+
+Security Note: Always use AES256 for maximum security. 
+
+ 
+
+generate_pair(algorithm) 
+
+Generate an asymmetric key pair (public + private keys). 
+
+Parameters: 
+
+algorithm (string): Key pair algorithm 
+RSA4096 - 4096-bit RSA (recommended) 
+RSA2048 - 2048-bit RSA 
+ECDSA_P256 - ECDSA with P-256 curve 
+ECDSA_P384 - ECDSA with P-384 curve 
+ECDSA_P521 - ECDSA with P-521 curve 
+Returns: KeyPair object with .private and .public properties 
+
+Example: 
+
+let rsa_keys = generate_pair(RSA4096) 
+let ecdsa_keys = generate_pair(ECDSA_P256) 
+ 
+let private = rsa_keys.private 
+let public = rsa_keys.public 
+ 
+
+Use Cases: 
+
+Digital signatures (ECDSA) 
+Key exchange (RSA) 
+Authentication 
+ 
+
+derive_key(password:, salt:, algorithm:, iterations:) 
+
+Derive an encryption key from a password using a Key Derivation Function. 
+
+Named Parameters: 
+
+password (string): User password 
+salt (bytes): Random salt (min 16 bytes) - use random_bytes(16) 
+algorithm (string): KDF algorithm 
+PBKDF2 - Password-Based Key Derivation Function 2 
+iterations (int): Number of iterations (min 100,000 recommended) 
+Returns: Key object (AES-256 key) 
+
+Example: 
+
+let user_password = "my_password" 
+let salt = random_bytes(16) 
+ 
+let key = derive_key( 
+   password: user_password, 
+   salt: salt, 
+   algorithm: PBKDF2, 
+   iterations: 100000 
+) 
+ 
+let encrypted = AES256("data", key: key, mode: GCM) 
+ 
+
+Security Notes: 
+
+Always use random salt (never hardcode) 
+Save the salt - you need it to decrypt 
+Use at least 100,000 iterations 
+Higher iterations = more secure but slower 
+ 
+
+Encryption & Decryption 
+
+AES256(plaintext, key:, mode:) 
+
+Encrypt data using AES-256. 
+
+Parameters: 
+
+plaintext (string): Data to encrypt 
+Named Parameters: 
+
+key (Key): Encryption key from generate() or derive_key() 
+mode (string): Cipher mode 
+GCM - Galois/Counter Mode (recommended - authenticated) 
+CBC - Cipher Block Chaining 
+Returns: Cipher object 
+
+Example: 
+
+let key = generate(AES256) 
+let encrypted = AES256("Secret data", key: key, mode: GCM) 
+ 
+
+Security Note: Always use GCM mode for authenticated encryption. 
+
+ 
+
+AES128(plaintext, key:, mode:) 
+
+Encrypt data using AES-128 (same API as AES256). 
+
+Example: 
+
+let key = generate(AES128) 
+let encrypted = AES128("data", key: key, mode: GCM) 
+ 
+
+Note: AES256 is recommended over AES128 for better security. 
+
+ 
+
+decrypt(ciphertext, key:) 
+
+Decrypt encrypted data. 
+
+Parameters: 
+
+ciphertext (Cipher): Encrypted data from AES256() or AES128() 
+Named Parameters: 
+
+key (Key): Decryption key (must be same key used for encryption) 
+Returns: String (decrypted plaintext) 
+
+Example: 
+
+let decrypted = decrypt(encrypted, key: key) 
+ 
+
+Error Handling: 
+
+Returns error if wrong key used 
+Returns error if data corrupted 
+GCM mode: also verifies authentication tag 
+ 
+
+Hashing 
+
+SHA256(data) 
+
+Compute SHA-256 cryptographic hash. 
+
+Parameters: 
+
+data (string): Data to hash 
+Returns: Hash object 
+
+Example: 
+
+let hash = SHA256("Hash this data") 
+print(hash)  // Hash(SHA256, 48e50550b5...) 
+ 
+
+Use Cases: 
+
+File integrity verification 
+Data fingerprinting 
+Commitment schemes 
+ 
+
+SHA3_256(data) 
+
+Compute SHA3-256 hash (Keccak). 
+
+Parameters: 
+
+data (string): Data to hash 
+Returns: Hash object 
+
+Example: 
+
+let hash = SHA3_256("data") 
+ 
+
+Note: SHA3 is more modern and resistant to length extension attacks. 
+
+ 
+
+BLAKE2b(data) 
+
+Compute BLAKE2b hash (fast and secure). 
+
+Parameters: 
+
+data (string): Data to hash 
+Returns: Hash object 
+
+Example: 
+
+let hash = BLAKE2b("data") 
+ 
+
+Note: BLAKE2b is faster than SHA-256 with similar security. 
+
+ 
+
+Digital Signatures 
+
+SIGN(data, key:, algorithm:) 
+
+Create a digital signature. 
+
+Parameters: 
+
+data (string or DNA): Data to sign 
+Named Parameters: 
+
+key (Key): Private key from generate_pair() 
+algorithm (string): Signature algorithm 
+ECDSA - Elliptic Curve DSA (recommended) 
+RSA - RSA signatures 
+Returns: Signature object 
+
+Example: 
+
+let keys = generate_pair(ECDSA_P256) 
+let signature = SIGN("document", key: keys.private, algorithm: ECDSA) 
+ 
+
+Use Cases: 
+
+Document authentication 
+Message verification 
+Non-repudiation 
+ 
+
+VERIFY(data, signature:, key:) 
+
+Verify a digital signature. 
+
+Parameters: 
+
+data (string or DNA): Data that was signed 
+Named Parameters: 
+
+signature (Signature): Signature to verify 
+key (Key): Public key corresponding to private key used for signing 
+Returns: Boolean (true if valid, false if invalid) 
+
+Example: 
+
+let valid = VERIFY( 
+   "document", 
+   signature: signature, 
+   key: keys.public 
+) 
+ 
+if valid { 
+   print("✓ Signature is authentic") 
+} else { 
+   print("✗ Signature verification failed!") 
+} 
+ 
+
+Security Note: Always verify signatures before trusting data. 
+
+ 
+
+Utilities 
+
+random_bytes(size) 
+
+Generate cryptographically secure random bytes. 
+
+Parameters: 
+
+size (int): Number of bytes to generate 
+Returns: Bytes 
+
+Example: 
+
+let salt = random_bytes(16)      // 16 bytes for salt 
+let nonce = random_bytes(12)     // 12 bytes for GCM nonce 
+let session_key = random_bytes(32) // 32 bytes for keys 
+ 
+
+Use Cases: 
+
+Salts for key derivation 
+Nonces for encryption 
+Session tokens 
+Challenge-response 
+ 
+
+DNA Functions 
+
+Encoding & Decoding 
+
+DNA.encode(data, mapping:) 
+
+Encode binary data as DNA sequence. 
+
+Parameters: 
+
+data (Cipher, string, or bytes): Data to encode 
+Named Parameters: 
+
+mapping (string): Encoding scheme 
+BINARY_2BIT - 2 bits per nucleotide (recommended) 
+BINARY_3BIT - 3 bits per nucleotide 
+CODON_TABLE - Codon-based encoding 
+Returns: DNA sequence 
+
+Example: 
+
+let key = generate(AES256) 
+let encrypted = AES256("secret", key: key, mode: GCM) 
+let dna = DNA.encode(encrypted, mapping: BINARY_2BIT) 
+ 
+print(dna)  // DNA(ATGCCGTA...) 
+ 
+
+Encoding Details: 
+
+Scheme 
+Bits/Nucleotide 
+Efficiency 
+Biological Realism 
+BINARY_2BIT 
+2 
+High 
+Medium 
+BINARY_3BIT 
+3 
+Higher 
+Medium 
+CODON_TABLE 
+Variable 
+Lower 
+High 
+Binary 2-bit Mapping: 
+
+00 → A (Adenine) 
+01 → T (Thymine) 
+10 → G (Guanine) 
+11 → C (Cytosine) 
+ 
+
+DNA.decode(dna_sequence, mapping:) 
+
+Decode DNA sequence back to binary data. 
+
+Parameters: 
+
+dna_sequence (DNA): DNA sequence to decode 
+Named Parameters: 
+
+mapping (string): Encoding scheme (must match encoding) 
+Returns: Bytes (original binary data) 
+
+Example: 
+
+let original_data = DNA.decode(dna, mapping: BINARY_2BIT) 
+ 
+
+Important: Must use the same mapping that was used for encoding! 
+
+ 
+
+DNA Transformations 
+
+DNA.complement(sequence) 
+
+Get the complement strand of DNA (A↔T, G↔C). 
+
+Parameters: 
+
+sequence (DNA or string): DNA sequence 
+Returns: DNA sequence 
+
+Example: 
+
+let seq = "ATGC" 
+let comp = DNA.complement(seq) 
+print(comp)  // DNA(TACG) 
+ 
+
+Biological Context: The complement strand pairs with the original in double-stranded DNA. 
+
+ 
+
+DNA.reverse(sequence) 
+
+Reverse the DNA sequence (5' → 3' to 3' → 5'). 
+
+Parameters: 
+
+sequence (DNA or string): DNA sequence 
+Returns: DNA sequence 
+
+Example: 
+
+let seq = "ATGC" 
+let rev = DNA.reverse(seq) 
+print(rev)  // DNA(CGTA) 
+ 
+
+ 
+
+DNA.reverse_complement(sequence) 
+
+Get the reverse complement of DNA. 
+
+Parameters: 
+
+sequence (DNA or string): DNA sequence 
+Returns: DNA sequence 
+
+Example: 
+
+let seq = "ATGC" 
+let rc = DNA.reverse_complement(seq) 
+print(rc)  // DNA(GCAT) 
+ 
+
+Biological Context: This represents the opposite strand in double-stranded DNA read in the same direction. 
+
+ 
+
+DNA Analysis 
+
+DNA.gc_content(sequence) 
+
+Calculate GC content (percentage of G and C nucleotides). 
+
+Parameters: 
+
+sequence (DNA or string): DNA sequence 
+Returns: Float (0.0 to 1.0) 
+
+Example: 
+
+let seq = "ATGCCGTA" 
+let gc = DNA.gc_content(seq) 
+print(gc)  // 0.5 (50% GC) 
+ 
+if gc > 0.6 { 
+   print("GC-rich region") 
+} 
+ 
+
+Biological Significance: 
+
+Human genome: ~41% GC 
+GC-rich: Often contains genes 
+AT-rich: Often regulatory regions 
+Varies by organism 
+ 
+
+DNA.length(sequence) 
+
+Get the length of DNA sequence in base pairs. 
+
+Parameters: 
+
+sequence (DNA or string): DNA sequence 
+Returns: Integer 
+
+Example: 
+
+let length = DNA.length("ATGCCGTA") 
+print(length)  // 8 
+ 
+
+ 
+
+DNA.validate(sequence) 
+
+Check if sequence contains only valid DNA nucleotides (A, T, G, C). 
+
+Parameters: 
+
+sequence (DNA or string): DNA sequence to validate 
+Returns: Boolean 
+
+Example: 
+
+let valid1 = DNA.validate("ATGC")     // true 
+let valid2 = DNA.validate("ATGX")     // false 
+let valid3 = DNA.validate("atgc")     // true (case insensitive) 
+ 
+
+ 
+
+Biological Operations 
+
+DNA.transcribe(sequence) 
+
+Transcribe DNA to RNA (T → U). 
+
+Parameters: 
+
+sequence (DNA or string): DNA sequence 
+Returns: RNA sequence 
+
+Example: 
+
+let dna = "ATGC" 
+let rna = DNA.transcribe(dna) 
+print(rna)  // "AUGC" 
+ 
+
+Biological Process: DNA → RNA (first step of gene expression) 
+
+ 
+
+DNA.translate(sequence) 
+
+Translate DNA to protein sequence using the genetic code. 
+
+Parameters: 
+
+sequence (DNA or string): DNA sequence (should be in frame) 
+Returns: String (amino acid sequence) 
+
+Example: 
+
+let dna = "ATGGGCAAATAA" 
+let protein = DNA.translate(dna) 
+print(protein)  // "MGK" (Met-Gly-Lys, stops at TAA) 
+ 
+
+Genetic Code: 
+
+ATG → M (Methionine, start codon) 
+GGC → G (Glycine) 
+AAA → K (Lysine) 
+TAA → * (Stop codon) 
+ 
+
+DNA.find_orfs(sequence) 
+
+Find all Open Reading Frames in the sequence. 
+
+Parameters: 
+
+sequence (DNA or string): DNA sequence to analyze 
+Returns: Array of ORF objects 
+
+ORF Object Properties: 
+
+start - Starting position 
+end - Ending position 
+length - Length in base pairs 
+sequence - ORF sequence 
+frame - Reading frame (0, 1, or 2) 
+strand - '+' or '-' 
+Example: 
+
+let long_seq = "ATGATGATGTAA..." 
+let orfs = DNA.find_orfs(long_seq) 
+ 
+// Each ORF starts with ATG and ends with TAA/TAG/TGA 
+ 
+
+Biological Context: ORFs are potential protein-coding regions. 
+
+ 
+
+DNA.find_motif(sequence, motif) 
+
+Find all occurrences of a pattern/motif in the sequence. 
+
+Parameters: 
+
+sequence (DNA or string): DNA sequence to search 
+motif (string): Pattern to find 
+Returns: Array of integers (starting positions) 
+
+Example: 
+
+let seq = "ATGATGCCGATGATG" 
+let positions = DNA.find_motif(seq, "ATG") 
+// Returns: [0, 3, 11] 
+ 
+let tata_boxes = DNA.find_motif(promoter, "TATA") 
+ 
+
+Use Cases: 
+
+Finding regulatory elements 
+Locating restriction sites 
+Pattern analysis 
+ 
+
+DNA.to_codons(sequence) 
+
+Split DNA sequence into codons (triplets). 
+
+Parameters: 
+
+sequence (DNA or string): DNA sequence 
+Returns: Array of Codon objects 
+
+Example: 
+
+let seq = "ATGCCGTAG" 
+let codons = DNA.to_codons(seq) 
+// Returns: ["ATG", "CCG", "TAG"] 
+ 
+
+Note: Incomplete codons at the end are excluded. 
+
+ 
+
+Utility Functions 
+
+print(value) 
+
+Print value to console. 
+
+Parameters: 
+
+value (any): Value to print 
+Returns: void 
+
+Example: 
+
+print("Hello") 
+print(42) 
+print(my_variable) 
+ 
+// Print multiple values 
+print("Value:") 
+print(x) 
+ 
+
+Supported Types: 
+
+Strings → printed as-is 
+Numbers → converted to string 
+Booleans → "True" or "False" 
+DNA → "DNA(sequence)" 
+Keys → "Key(algorithm)" 
+Ciphers → "Cipher(algorithm)" 
+Hashes → "Hash(algorithm, digest...)" 
+ 
+
+Data Types 
+
+Primitive Types 
+
+string 
+
+Text data (UTF-8 encoded). 
+
+let text: string = "Hello" 
+let message = "World"  // Type inferred 
+ 
+
+int 
+
+Integer numbers. 
+
+let count: int = 42 
+let negative = -10 
+ 
+
+float 
+
+Floating-point numbers. 
+
+let pi: float = 3.14159 
+let temperature = 98.6 
+ 
+
+bool 
+
+Boolean values. 
+
+let active: bool = true 
+let verified = false 
+ 
+
+null 
+
+Null/undefined value. 
+
+let empty = null 
+ 
+
+ 
+
+Biological Types 
+
+DNA 
+
+DNA sequence (A, T, G, C). 
+
+let sequence: DNA = "ATGCCGTA" 
+let dna = DNA.encode(data, mapping: BINARY_2BIT) 
+ 
+
+Properties: 
+
+Contains only A, T, G, C nucleotides 
+Case-insensitive 
+Represents single-stranded DNA 
+RNA 
+
+RNA sequence (A, U, G, C). 
+
+let rna = DNA.transcribe(dna)  // Creates RNA 
+ 
+
+Properties: 
+
+Contains A, U, G, C (U replaces T) 
+Represents single-stranded RNA 
+Codon 
+
+Three-nucleotide unit. 
+
+let codons = DNA.to_codons(sequence) 
+ 
+
+Properties: 
+
+Exactly 3 nucleotides 
+Codes for amino acids 
+Gene 
+
+Structured DNA with metadata. 
+
+let gene = bio.create_gene(sequence, metadata: { 
+   name: "gene1", 
+   organism: "synthetic" 
+}) 
+ 
+
+ 
+
+Cryptographic Types 
+
+Key 
+
+Cryptographic key (symmetric or asymmetric). 
+
+let symmetric_key: Key = generate(AES256) 
+let key_pair = generate_pair(RSA4096) 
+let private: Key = key_pair.private 
+ 
+
+Properties: 
+
+algorithm - Key algorithm 
+size - Key size in bits 
+KeyPair 
+
+Public and private key pair. 
+
+let keys = generate_pair(ECDSA_P256) 
+keys.private  // Private key 
+keys.public   // Public key 
+ 
+
+Cipher 
+
+Encrypted data. 
+
+let encrypted: Cipher = AES256(data, key: key, mode: GCM) 
+ 
+
+Properties: 
+
+algorithm - Encryption algorithm used 
+Contains: ciphertext, IV, authentication tag (if GCM) 
+Hash 
+
+Cryptographic hash digest. 
+
+let hash: Hash = SHA256("data") 
+ 
+
+Properties: 
+
+algorithm - Hash algorithm used 
+digest - Hash value (bytes) 
+Signature 
+
+Digital signature. 
+
+let sig: Signature = SIGN(data, key: priv, algorithm: ECDSA) 
+ 
+
+Properties: 
+
+algorithm - Signature algorithm 
+value - Signature bytes 
+ 
+
+Constants 
+
+Encryption Algorithms 
+
+AES256      // 256-bit AES (recommended) 
+AES128      // 128-bit AES 
+RSA4096     // 4096-bit RSA (recommended) 
+RSA2048     // 2048-bit RSA 
+ECDSA_P256  // ECDSA with P-256 curve 
+ECDSA_P384  // ECDSA with P-384 curve 
+ECDSA_P521  // ECDSA with P-521 curve 
+ 
+
+Hash Algorithms 
+
+SHA256      // SHA-256 (common) 
+SHA3_256    // SHA3-256 (modern) 
+SHA3_512    // SHA3-512 (more bits) 
+BLAKE2b     // BLAKE2b (fast) 
+BLAKE2s     // BLAKE2s (optimized for 32-bit) 
+ 
+
+Cipher Modes 
+
+GCM  // Galois/Counter Mode (authenticated encryption) 
+CBC  // Cipher Block Chaining 
+ 
+
+Key Derivation Functions 
+
+PBKDF2  // Password-Based Key Derivation Function 2 
+ 
+
+DNA Encoding Schemes 
+
+BINARY_2BIT   // 2 bits per nucleotide 
+BINARY_3BIT   // 3 bits per nucleotide 
+CODON_TABLE   // Codon-based encoding 
+ 
+
+Signature Algorithms 
+
+ECDSA  // Elliptic Curve Digital Signature Algorithm 
+RSA    // RSA signatures 
+ 
+
+Special Constants 
+
+autoGenerate  // Auto-generate key (future feature) 
+ 
+
+ 
+
+Error Types 
+
+Runtime Errors 
+
+DecryptionError 
+
+Thrown when decryption fails 
+Causes: Wrong key, corrupted data, wrong algorithm 
+SignatureError 
+
+Thrown when signature operation fails 
+Causes: Invalid signature, wrong key 
+InvalidDNAError 
+
+Thrown when DNA sequence contains invalid characters 
+Causes: Non-ATGC characters in sequence 
+KeyError 
+
+Thrown when key operation fails 
+Causes: Invalid algorithm, wrong key type 
+ 
+
+Usage Patterns 
+
+Pattern: Encrypt-Encode-Sign 
+
+// Complete security pipeline 
+let data = "Sensitive data" 
+ 
+// 1. Encrypt 
+let key = generate(AES256) 
+let encrypted = AES256(data, key: key, mode: GCM) 
+ 
+// 2. Encode as DNA 
+let dna = DNA.encode(encrypted, mapping: BINARY_2BIT) 
+ 
+// 3. Sign 
+let keys = generate_pair(ECDSA_P256) 
+let sig = SIGN(dna, key: keys.private, algorithm: ECDSA) 
+ 
+// 4. Verify 
+let ok = VERIFY(dna, signature: sig, key: keys.public) 
+ 
+
+Pattern: Password-Protected Data 
+
+// Encryption 
+let password = "user_password" 
+let salt = random_bytes(16) 
+let key = derive_key(password: password, salt: salt, algorithm: PBKDF2, iterations: 100000) 
+let enc = AES256(data, key: key, mode: GCM) 
+ 
+// Save: encrypted + salt (not key or password!) 
+ 
+// Decryption (user enters password again) 
+let dec_key = derive_key(password: password, salt: salt, algorithm: PBKDF2, iterations: 100000) 
+let dec = decrypt(enc, key: dec_key) 
+ 
+
+Pattern: DNA Analysis 
+
+let seq = "ATGCCGTAGCTA" 
+ 
+// Comprehensive analysis 
+let gc = DNA.gc_content(seq) 
+let len = DNA.length(seq) 
+let comp = DNA.complement(seq) 
+let rc = DNA.reverse_complement(seq) 
+ 
+// Report 
+print("GC%:") 
+print(gc) 
+print("Length:") 
+print(len) 
+ 
+
+ 
+
+Performance Considerations 
+
+Iteration Counts 
+
+Iterations 
+Security 
+Speed 
+Use Case 
+10,000 
+Low 
+Fast 
+Testing only 
+100,000 
+Good 
+Medium 
+Standard use 
+200,000 
+Better 
+Slow 
+Sensitive data 
+500,000 
+Excellent 
+Very slow 
+Maximum security 
+Algorithm Selection 
+
+For Speed: 
+
+ECDSA_P256 (faster than RSA) 
+BLAKE2b (faster than SHA256) 
+GCM mode (efficient) 
+For Security: 
+
+RSA4096 / ECDSA_P384 
+SHA3_256 
+200,000+ iterations 
+ 
+
+Version Information 
+
+Current Version: 1.0.0 
+
+Implemented Features: 
+
+All cryptography functions 
+All DNA encoding/decoding 
+All DNA transformations 
+All DNA analysis functions 
+Control flow (if-else) 
+Basic operators 
+Coming in Next Version: 
+
+User-defined functions (execution) 
+While/For loops (execution) 
+Try-catch (execution) 
+File I/O functions 
+Array/Dictionary operations 
+ 
+
+Additional Notes 
+
+Case Sensitivity 
+
+DNA sequences: Case-insensitive ("ATGC" == "atgc") 
+Keywords: Case-sensitive (let not LET) 
+Variable names: Case-sensitive (myVar ≠ myvar) 
+Memory Management 
+
+Automatic memory management 
+No manual cleanup required 
+Keys and sensitive data handled securely 
+Thread Safety 
+
+Current version: Single-threaded 
+Safe for sequential execution 
+ 
+
+Last updated: November 2025 
+
+ 
