@@ -2,7 +2,7 @@
 DNACrypt - A Domain-Specific Language for DNA-Based Cryptography
 """
 
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 __author__ = "Harshith Madhavaram"
 __license__ = "MIT"
 
