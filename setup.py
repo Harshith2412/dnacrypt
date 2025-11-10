@@ -11,7 +11,7 @@ setup(
     description="A domain-specific programming language for DNA-based cryptography",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/yourusername/dnacrypt",
+    url="https://github.com/Harshith2412/dnacrypt",
     packages=find_packages(),
     classifiers=[
         "Development Status :: 4 - Beta",
